@@ -90,3 +90,17 @@ export async function getReports(): Promise<Report[]> {
     return [];
   }
 }
+
+// 🗑️ ELIMINAR REPORTE
+export async function deleteReport(id: string) {
+  try {
+    const existing = await AsyncStorage.getItem(STORAGE_KEY);
+    const reports: Report[] = existing ? JSON.parse(existing) : [];
+
+    const filtered = reports.filter((report) => report.id !== id);
+
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+  } catch (error) {
+    console.error('Error eliminando reporte', error);
+  }
+}

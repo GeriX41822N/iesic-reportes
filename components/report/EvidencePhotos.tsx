@@ -1,50 +1,65 @@
-import { View, Text, Button } from 'react-native';
-
-type EvidencePhotosType = {
-  filtros: string | null;
-  serpentines: string | null;
-  turbina: string | null;
-  ventilador: string | null;
-};
+import { Button, StyleSheet, Text, View } from 'react-native';
+import { pickImage } from '../../utils/imagePicker';
 
 type Props = {
-  data: EvidencePhotosType;
-  onChange: (data: EvidencePhotosType) => void;
+  data: {
+    filtros: string | null;
+    serpentines: string | null;
+    turbina: string | null;
+    ventilador: string | null;
+  };
+  onChange: (data: Props['data']) => void;
 };
 
 export default function EvidencePhotos({ data, onChange }: Props) {
-  const setPhoto = (key: keyof EvidencePhotosType) => {
-    // simulamos una foto por ahora
+  async function handlePick(key: keyof Props['data'], fromCamera: boolean) {
+    const uri = await pickImage(fromCamera);
+    if (!uri) return;
+
     onChange({
       ...data,
-      [key]: 'foto-capturada',
+      [key]: uri,
     });
-  };
+  }
 
-  const allPhotosReady = Object.values(data).every(Boolean);
+  function renderPhoto(label: string, key: keyof Props['data']) {
+    const hasPhoto = !!data[key];
+
+    return (
+      <View style={styles.block}>
+        <Text style={styles.label}>
+          {label} {hasPhoto ? '✅' : '❌'}
+        </Text>
+
+        <View style={styles.buttons}>
+          <Button
+            title={hasPhoto ? 'Cambiar foto 📷' : 'Tomar foto 📷'}
+            onPress={() => handlePick(key, true)}
+          />
+          <Button
+            title="Galería 🖼️"
+            onPress={() => handlePick(key, false)}
+          />
+        </View>
+      </View>
+    );
+  }
 
   return (
-    <View style={{ marginBottom: 24 }}>
-      <Text style={{ color: '#fff', marginBottom: 8 }}>
-        Evidencia fotográfica (4 obligatorias)
-      </Text>
+    <View>
+      <Text style={styles.title}>Evidencia fotográfica</Text>
 
-      <Button title="Foto de filtros" onPress={() => setPhoto('filtros')} />
-      <Button title="Foto de serpentines" onPress={() => setPhoto('serpentines')} />
-      <Button title="Foto de turbina" onPress={() => setPhoto('turbina')} />
-      <Button title="Foto de ventilador" onPress={() => setPhoto('ventilador')} />
-
-      {!allPhotosReady && (
-        <Text style={{ color: 'red', marginTop: 12 }}>
-          Faltan fotos obligatorias
-        </Text>
-      )}
-
-      {allPhotosReady && (
-        <Text style={{ color: 'lightgreen', marginTop: 12 }}>
-          ✔ Evidencia completa
-        </Text>
-      )}
+      {renderPhoto('Filtros', 'filtros')}
+      {renderPhoto('Serpentines', 'serpentines')}
+      {renderPhoto('Turbina', 'turbina')}
+      {renderPhoto('Ventilador', 'ventilador')}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  title: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 12 },
+  block: { marginBottom: 16 },
+  label: { color: '#ddd', marginBottom: 6 },
+  buttons: { flexDirection: 'row', gap: 8 },
+});

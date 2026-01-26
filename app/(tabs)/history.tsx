@@ -1,15 +1,19 @@
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+
 
 import { getReports, Report } from '../../utils/reportStorage';
 
 export default function HistoryScreen() {
   const [reports, setReports] = useState<Report[]>([]);
 
-  useEffect(() => {
-    loadReports();
-  }, []);
+      useFocusEffect(
+      useCallback(() => {
+        loadReports();
+      }, [])
+    );
+
 
   const loadReports = async () => {
     const data = await getReports();

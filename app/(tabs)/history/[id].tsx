@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Button, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { deleteReport } from '../../../utils/reportStorage';
 
 export default function ReportDetailScreen() {
   const { report } = useLocalSearchParams();
@@ -47,6 +48,27 @@ export default function ReportDetailScreen() {
             },
           })
         }
+      />
+      <Button
+        title="Eliminar reporte 🗑️"
+        color="red"
+        onPress={() => {
+          Alert.alert(
+            'Eliminar reporte',
+            '¿Seguro que deseas eliminar este reporte? Esta acción no se puede deshacer.',
+            [
+              { text: 'Cancelar', style: 'cancel' },
+              {
+                text: 'Eliminar',
+                style: 'destructive',
+                onPress: async () => {
+                  await deleteReport(parsed.id);
+                  router.replace('/history');
+                },
+              },
+            ]
+          );
+        }}
       />
     </ScrollView>
   );
