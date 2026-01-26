@@ -36,11 +36,13 @@ export default function NewReportScreen() {
 
   const [report, setReport] = useState<
     Omit<Report, 'id' | 'createdAt'> | Report
-  >(editingReport ?? EMPTY_REPORT);
+  >(EMPTY_REPORT);
 
-  // 🧼 Si entras sin params → formulario limpio
+  // 🔥 PRECARGA O LIMPIEZA CORRECTA
   useEffect(() => {
-    if (!editingReport) {
+    if (editingReport) {
+      setReport(editingReport);
+    } else {
       setReport(EMPTY_REPORT);
     }
   }, [params.report]);
@@ -55,11 +57,11 @@ export default function NewReportScreen() {
       generalData.tecnico.trim() !== '';
 
     if (isEditing) {
-      // ✏️ en edición NO obligamos a rehacer fotos
+      // ✏️ En edición NO forzamos fotos
       return generalDataValid;
     }
 
-    // 🆕 nuevo reporte → todo obligatorio
+    // 🆕 Nuevo → todo obligatorio
     const photosValid =
       !!evidencePhotos.filtros &&
       !!evidencePhotos.serpentines &&
@@ -81,7 +83,7 @@ export default function NewReportScreen() {
     // 🧼 limpiar formulario
     setReport(EMPTY_REPORT);
 
-    // 🔄 cerrar ciclo → historial
+    // 🔄 regresar a historial
     router.replace('/history');
   };
 
