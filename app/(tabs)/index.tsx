@@ -1,98 +1,94 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
+import { Alert, Button, ScrollView } from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import Activities from '../../components/report/Activities';
+import EquipmentData from '../../components/report/EquipmentData';
+import EvidencePhotos from '../../components/report/EvidencePhotos';
+import GeneralData from '../../components/report/GeneralData';
+import Measurements from '../../components/report/Measurements';
+import Observations from '../../components/report/Observations';
 
-export default function HomeScreen() {
+import { saveReport } from '../../utils/reportStorage';
+// updateReport lo haremos en el siguiente paso 😉
+
+export default function NewReportScreen() {
+  const params = useLocalSearchParams();
+
+  const editingReport = params.report
+    ? JSON.parse(params.report as string)
+    : null;
+
+  const [report, setReport] = useState(
+    editingReport ?? {
+      generalData: {
+        cliente: '',
+        fecha: '',
+        tecnico: '',
+      },
+      evidencePhotos: {
+        filtros: null,
+        serpentines: null,
+        turbina: null,
+        ventilador: null,
+      },
+    }
+  );
+
+  const isReportValid = () => {
+    const { generalData, evidencePhotos } = report;
+
+    const generalDataValid =
+      generalData.cliente.trim() !== '' &&
+      generalData.fecha.trim() !== '' &&
+      generalData.tecnico.trim() !== '';
+
+    const photosValid =
+      !!evidencePhotos.filtros &&
+      !!evidencePhotos.serpentines &&
+      !!evidencePhotos.turbina &&
+      !!evidencePhotos.ventilador;
+
+    return generalDataValid && photosValid;
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <GeneralData
+        data={report.generalData}
+        onChange={(updatedData) =>
+          setReport({ ...report, generalData: updatedData })
+        }
+      />
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <EquipmentData />
+      <Measurements />
+
+      <EvidencePhotos
+        data={report.evidencePhotos}
+        onChange={(updatedPhotos) =>
+          setReport({ ...report, evidencePhotos: updatedPhotos })
+        }
+      />
+
+      <Activities />
+      <Observations />
+
+      <Button
+        title={editingReport ? 'Actualizar reporte ✏️' : 'Guardar reporte'}
+        disabled={!isReportValid()}
+        onPress={async () => {
+          if (editingReport) {
+            // updateReport(report) ← siguiente paso
+            Alert.alert('Reporte actualizado ✏️');
+          } else {
+            await saveReport(report);
+            Alert.alert('Reporte guardado ✅');
+          }
+
+          router.replace('/history');
+        }}
+      />
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
