@@ -13,12 +13,14 @@ export async function pickImage(fromCamera: boolean) {
   const result = fromCamera
     ? await ImagePicker.launchCameraAsync({
         quality: 0.7,
+        base64: true,
       })
     : await ImagePicker.launchImageLibraryAsync({
         quality: 0.7,
+        base64: true,
       });
 
   if (result.canceled) return null;
 
-  return result.assets[0].uri;
+  return `data:image/jpeg;base64,${result.assets[0].base64}`;
 }

@@ -4,24 +4,69 @@ const STORAGE_KEY = 'reports';
 
 export type Report = {
   id: string;
+
   generalData: {
     cliente: string;
     fecha: string;
     tecnico: string;
   };
+
+  equipmentData: {
+    ubicacion: string;
+    marca: string;
+    modelo: string;
+    capacidadBTU: string;
+    numeroSerie: string;
+  };
+
   evidencePhotos: {
     filtros: string | null;
     serpentines: string | null;
     turbina: string | null;
     ventilador: string | null;
   };
+
+  activities: {
+    limpiezaFiltros: boolean;
+    limpiezaEvaporador: boolean;
+    limpiezaCondensador: boolean;
+    limpiezaDrenaje: boolean;
+    ajusteTornilleria: boolean;
+    revisionGas: boolean;
+    medicionElectrica: boolean;
+    revisionControlRemoto: boolean;
+    verificacionGeneral: boolean;
+  };
+
+  measurements: {
+    presionGas: string;
+    corriente: string;
+    voltaje: string;
+  };
+
+  observations: {
+    plantillas: {
+      parametrosNormales: boolean;
+      consumoElevado: boolean;
+      obstruccionDrenaje: boolean;
+      recomendacionPreventivo: boolean;
+    };
+    comentarioLibre: string;
+  };
+
+  // 🖋️ firmas SIEMPRE presentes (aunque vacías)
+  signatures: {
+    tecnico: string;
+    encargado: string;
+    fechaFirma: string;
+  };
+
   createdAt: string;
 };
 
 // 🆔 GENERADOR DE ID PROFESIONAL
 function generateReportId(tecnico: string) {
   const now = new Date();
-
   const pad = (n: number) => n.toString().padStart(2, '0');
 
   const timestamp =
@@ -42,10 +87,10 @@ function generateReportId(tecnico: string) {
   return `${timestamp}-${initials}`;
 }
 
-// 🆕 CREAR REPORTE
+// 🆕 CREAR REPORTE (RETORNA EL REPORTE CREADO)
 export async function saveReport(
   report: Omit<Report, 'id' | 'createdAt'>
-) {
+): Promise<Report> {
   try {
     const existing = await AsyncStorage.getItem(STORAGE_KEY);
     const reports: Report[] = existing ? JSON.parse(existing) : [];
@@ -57,26 +102,29 @@ export async function saveReport(
     };
 
     reports.push(newReport);
-
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+
+    return newReport;
   } catch (error) {
     console.error('Error guardando reporte', error);
+    throw error;
   }
 }
 
 // ✏️ ACTUALIZAR REPORTE (NO toca ID)
-export async function updateReport(updatedReport: Report) {
+export async function updateReport(updatedReport: Report): Promise<void> {
   try {
     const existing = await AsyncStorage.getItem(STORAGE_KEY);
     const reports: Report[] = existing ? JSON.parse(existing) : [];
 
-    const updated = reports.map((report) =>
-      report.id === updatedReport.id ? updatedReport : report
+    const updated = reports.map(r =>
+      r.id === updatedReport.id ? updatedReport : r
     );
 
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   } catch (error) {
     console.error('Error actualizando reporte', error);
+    throw error;
   }
 }
 
@@ -92,15 +140,15 @@ export async function getReports(): Promise<Report[]> {
 }
 
 // 🗑️ ELIMINAR REPORTE
-export async function deleteReport(id: string) {
+export async function deleteReport(id: string): Promise<void> {
   try {
     const existing = await AsyncStorage.getItem(STORAGE_KEY);
     const reports: Report[] = existing ? JSON.parse(existing) : [];
 
-    const filtered = reports.filter((report) => report.id !== id);
-
+    const filtered = reports.filter(r => r.id !== id);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
   } catch (error) {
     console.error('Error eliminando reporte', error);
+    throw error;
   }
 }

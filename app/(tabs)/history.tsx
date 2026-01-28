@@ -1,19 +1,25 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-
+import { generateAndSharePDF } from '../../utils/pdfGenerator';
 import { getReports, Report } from '../../utils/reportStorage';
 
 export default function HistoryScreen() {
   const [reports, setReports] = useState<Report[]>([]);
 
-      useFocusEffect(
-      useCallback(() => {
-        loadReports();
-      }, [])
-    );
-
+  useFocusEffect(
+    useCallback(() => {
+      loadReports();
+    }, [])
+  );
 
   const loadReports = async () => {
     const data = await getReports();
@@ -29,28 +35,44 @@ export default function HistoryScreen() {
       ) : (
         <FlatList
           data={reports}
-          keyExtractor={(_, index) => index.toString()}
-          renderItem={({ item, index }) => (
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
             <Pressable
               style={styles.card}
               onPress={() =>
                 router.push({
                   pathname: '/history/[id]',
                   params: {
-                    id: index.toString(),
+                    id: item.id,
                     report: JSON.stringify(item),
                   },
                 })
               }
             >
-              <Text style={styles.cardTitle}>
-                Cliente: {item.generalData.cliente}
-              </Text>
-              <Text style={styles.text}>Fecha: {item.generalData.fecha}</Text>
-              <Text style={styles.text}>Técnico: {item.generalData.tecnico}</Text>
-              <Text style={styles.date}>
-                Guardado: {new Date(item.createdAt).toLocaleString()}
-              </Text>
+              {/* INFO */}
+              <View style={styles.info}>
+                <Text style={styles.cardTitle}>
+                  Cliente: {item.generalData.cliente}
+                </Text>
+                <Text style={styles.text}>
+                  Fecha: {item.generalData.fecha}
+                </Text>
+                <Text style={styles.text}>
+                  Técnico: {item.generalData.tecnico}
+                </Text>
+                <Text style={styles.date}>
+                  Guardado:{' '}
+                  {new Date(item.createdAt).toLocaleString()}
+                </Text>
+              </View>
+
+              {/* BOTÓN COMPARTIR */}
+              <TouchableOpacity
+                style={styles.shareButton}
+                onPress={() => generateAndSharePDF(item)}
+              >
+                <Text style={styles.shareIcon}>📄</Text>
+              </TouchableOpacity>
             </Pressable>
           )}
         />
@@ -80,6 +102,12 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  info: {
+    flex: 1,
+    paddingRight: 8,
   },
   cardTitle: {
     color: '#fff',
@@ -93,5 +121,16 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 6,
     fontSize: 12,
+  },
+  shareButton: {
+    padding: 10,
+    backgroundColor: '#1e5fa3',
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shareIcon: {
+    fontSize: 18,
+    color: '#fff',
   },
 });
