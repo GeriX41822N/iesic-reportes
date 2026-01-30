@@ -108,10 +108,58 @@ async function generateHTML(report: Report) {
 <head>
 <meta charset="utf-8" />
 <style>
-  body { font-family: Arial; font-size: 12px; padding: 24px; }
-  h3 { color: #1e5fa3; margin-top: 20px; }
-  table { border-collapse: collapse; width: 100%; }
-  td { padding: 6px; }
+  @page {
+    size: letter;
+    margin: 15mm;
+  }
+
+  body {
+    font-family: Arial;
+    font-size: 11px;
+    padding: 0;
+    line-height: 1.25;
+  }
+
+  h3 {
+    color: #1e5fa3;
+    font-size: 13px;
+    margin: 10px 0 4px 0;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  td {
+    padding: 4px;
+    vertical-align: top;
+  }
+
+  .box {
+    border: 1px solid #000;
+    padding: 6px;
+  }
+
+  .header-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #1e5fa3;
+  }
+
+  .photos img {
+    width: 100%;
+    max-height: 120px;
+    object-fit: cover;
+  }
+
+  .signatures img {
+    width: 140px;
+  }
+
+  .no-break {
+    page-break-inside: avoid;
+  }
 </style>
 </head>
 
@@ -120,7 +168,7 @@ async function generateHTML(report: Report) {
 <table>
 <tr>
 <td width="20%"><img src="${IESIC_LOGO_BASE64}" style="width:90px;" /></td>
-<td width="60%" align="center" style="font-size:16px;font-weight:bold;color:#1e5fa3;">
+<td width="60%" align="center" class="header-title">
 REPORTE DE MANTENIMIENTO PREVENTIVO – MINISPLIT
 </td>
 <td width="20%" align="right">
@@ -153,29 +201,45 @@ REPORTE DE MANTENIMIENTO PREVENTIVO – MINISPLIT
 </table>
 
 <h3>Actividades Realizadas</h3>
-<div>${activitiesHTML}</div>
+<div class="box">
+${activitiesHTML}
+</div>
 
 <h3>Evidencia Fotográfica</h3>
-<table>
+<table class="photos no-break">
 <tr>
-${photos.map(p => `<td><img src="${p}" style="width:100%;max-height:180px;" /></td>`).join('')}
+${
+  photos.length
+    ? photos
+        .map(
+          (p) =>
+            `<td width="25%"><img src="${p}" /></td>`
+        )
+        .join('')
+    : '<td>No se adjuntaron fotografías</td>'
+}
 </tr>
 </table>
 
+
 <h3>Observaciones / Recomendaciones</h3>
-<div style="border:1px solid #000;padding:8px;">
+<div class="box">
 ${observationsText || 'Sin observaciones'}
 </div>
 
-<table style="margin-top:40px;">
+<table class="signatures no-break" style="margin-top:20px;">
+
 <tr>
 <td align="center">
 ${tecnico ? `<img src="${tecnico}" style="width:160px;" />` : ''}
-<br/>Firma del Técnico
+<div style="border-top:1px solid #000;width:80%;margin:auto;"></div>
+Firma del Técnico
 </td>
+
 <td align="center">
 ${encargado ? `<img src="${encargado}" style="width:160px;" />` : ''}
-<br/>Firma del Cliente / Responsable
+<div style="border-top:1px solid #000;width:80%;margin:auto;"></div>
+Firma del Cliente / Responsable
 </td>
 </tr>
 </table>

@@ -120,14 +120,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   shareButton: {
-    padding: 10,
+    width: 44,
+    height: 44,
     backgroundColor: '#1e5fa3',
-    borderRadius: 6,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   shareIcon: {
-    fontSize: 18,
+    fontSize: 20,
     color: '#fff',
+    textAlign: 'center',
   },
+
 });

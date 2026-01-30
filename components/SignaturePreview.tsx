@@ -30,7 +30,12 @@ export default function SignaturePreview({ label, value, onPress }: Props) {
 
 const styles = StyleSheet.create({
   container: { marginBottom: 20 },
-  label: { fontWeight: 'bold', marginBottom: 6 },
+  label: {
+  fontWeight: 'bold',
+  marginBottom: 6,
+  color: '#fff', // 👈 CLAVE
+},
+
   image: { height: 80, resizeMode: 'contain', backgroundColor: '#eee' },
   placeholder: {
     height: 80,
