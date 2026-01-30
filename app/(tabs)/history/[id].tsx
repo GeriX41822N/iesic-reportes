@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Button,
@@ -9,10 +10,37 @@ import {
 } from 'react-native';
 
 import { generateAndSharePDF } from '../../../utils/pdfGenerator';
-import { deleteReport, Report } from '../../../utils/reportStorage';
+import { deleteReport, getReports, Report } from '../../../utils/reportStorage';
 
 export default function ReportDetailScreen() {
-  const { report } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const [report, setReport] = useState<Report | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadReport();
+  }, []);
+
+  const loadReport = async () => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
+    const reports = await getReports();
+    const found = reports.find(r => r.id === id);
+
+    setReport(found ?? null);
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.text}>Cargando reporte… ⏳</Text>
+      </View>
+    );
+  }
 
   if (!report) {
     return (
@@ -22,8 +50,6 @@ export default function ReportDetailScreen() {
     );
   }
 
-  const parsed: Report = JSON.parse(report as string);
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Detalle del reporte</Text>
@@ -31,26 +57,30 @@ export default function ReportDetailScreen() {
       {/* DATOS GENERALES */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Datos generales</Text>
-        <Text style={styles.text}>Cliente: {parsed.generalData.cliente}</Text>
-        <Text style={styles.text}>Fecha: {parsed.generalData.fecha}</Text>
-        <Text style={styles.text}>Técnico: {parsed.generalData.tecnico}</Text>
-        <Text style={styles.text}>Folio: {parsed.id}</Text>
+        <Text style={styles.text}>Cliente: {report.generalData.cliente}</Text>
+        <Text style={styles.text}>Fecha: {report.generalData.fecha}</Text>
+        <Text style={styles.text}>Técnico: {report.generalData.tecnico}</Text>
+        <Text style={styles.text}>Folio: {report.id}</Text>
       </View>
 
       {/* DATOS DEL EQUIPO */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Datos del equipo</Text>
-        <Text style={styles.text}>Ubicación: {parsed.equipmentData.ubicacion}</Text>
-        <Text style={styles.text}>Marca: {parsed.equipmentData.marca}</Text>
-        <Text style={styles.text}>Modelo: {parsed.equipmentData.modelo}</Text>
-        <Text style={styles.text}>Capacidad BTU: {parsed.equipmentData.capacidadBTU}</Text>
-        <Text style={styles.text}>No. Serie: {parsed.equipmentData.numeroSerie}</Text>
+        <Text style={styles.text}>Ubicación: {report.equipmentData.ubicacion}</Text>
+        <Text style={styles.text}>Marca: {report.equipmentData.marca}</Text>
+        <Text style={styles.text}>Modelo: {report.equipmentData.modelo}</Text>
+        <Text style={styles.text}>
+          Capacidad BTU: {report.equipmentData.capacidadBTU}
+        </Text>
+        <Text style={styles.text}>
+          No. Serie: {report.equipmentData.numeroSerie}
+        </Text>
       </View>
 
       {/* ACTIVIDADES */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Actividades realizadas</Text>
-        {Object.entries(parsed.activities).map(([key, value]) => (
+        {Object.entries(report.activities).map(([key, value]) => (
           <Text key={key} style={styles.text}>
             {value ? '✅' : '❌'} {key}
           </Text>
@@ -61,13 +91,13 @@ export default function ReportDetailScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Mediciones</Text>
         <Text style={styles.text}>
-          Presión gas: {parsed.measurements.presionGas}
+          Presión gas: {report.measurements.presionGas}
         </Text>
         <Text style={styles.text}>
-          Corriente: {parsed.measurements.corriente}
+          Corriente: {report.measurements.corriente}
         </Text>
         <Text style={styles.text}>
-          Voltaje: {parsed.measurements.voltaje}
+          Voltaje: {report.measurements.voltaje}
         </Text>
       </View>
 
@@ -75,7 +105,7 @@ export default function ReportDetailScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Observaciones</Text>
         <Text style={styles.text}>
-          {parsed.observations.comentarioLibre || 'Sin observaciones'}
+          {report.observations.comentarioLibre || 'Sin observaciones'}
         </Text>
       </View>
 
@@ -83,29 +113,29 @@ export default function ReportDetailScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Evidencia fotográfica</Text>
         <Text style={styles.text}>
-          Filtros: {parsed.evidencePhotos.filtros ? '✅' : '❌'}
+          Filtros: {report.evidencePhotos.filtros ? '✅' : '❌'}
         </Text>
         <Text style={styles.text}>
-          Serpentines: {parsed.evidencePhotos.serpentines ? '✅' : '❌'}
+          Serpentines: {report.evidencePhotos.serpentines ? '✅' : '❌'}
         </Text>
         <Text style={styles.text}>
-          Turbina: {parsed.evidencePhotos.turbina ? '✅' : '❌'}
+          Turbina: {report.evidencePhotos.turbina ? '✅' : '❌'}
         </Text>
         <Text style={styles.text}>
-          Ventilador: {parsed.evidencePhotos.ventilador ? '✅' : '❌'}
+          Ventilador: {report.evidencePhotos.ventilador ? '✅' : '❌'}
         </Text>
       </View>
 
       {/* FECHA */}
       <Text style={styles.date}>
-        Guardado: {new Date(parsed.createdAt).toLocaleString()}
+        Guardado: {new Date(report.createdAt).toLocaleString()}
       </Text>
 
       {/* BOTONES */}
       <View style={{ marginTop: 16 }}>
         <Button
           title="Compartir PDF 📄"
-          onPress={() => generateAndSharePDF(parsed)}
+          onPress={() => generateAndSharePDF(report)}
         />
       </View>
 
@@ -115,9 +145,7 @@ export default function ReportDetailScreen() {
           onPress={() =>
             router.push({
               pathname: '/',
-              params: {
-                report: JSON.stringify(parsed),
-              },
+              params: { id: report.id }, // 👈 mismo patrón: SOLO ID
             })
           }
         />
@@ -137,7 +165,7 @@ export default function ReportDetailScreen() {
                   text: 'Eliminar',
                   style: 'destructive',
                   onPress: async () => {
-                    await deleteReport(parsed.id);
+                    await deleteReport(report.id);
                     router.replace('/history');
                   },
                 },

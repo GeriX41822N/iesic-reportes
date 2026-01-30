@@ -42,10 +42,7 @@ export default function HistoryScreen() {
               onPress={() =>
                 router.push({
                   pathname: '/history/[id]',
-                  params: {
-                    id: item.id,
-                    report: JSON.stringify(item),
-                  },
+                  params: { id: item.id }, // ✅ SOLO ID
                 })
               }
             >

@@ -20,7 +20,7 @@ export type Report = {
   };
 
   evidencePhotos: {
-    filtros: string | null;
+    filtros: string | null;       // 👈 rutas a archivos
     serpentines: string | null;
     turbina: string | null;
     ventilador: string | null;
@@ -54,17 +54,17 @@ export type Report = {
     comentarioLibre: string;
   };
 
-  // 🖋️ firmas SIEMPRE presentes (aunque vacías)
+  // 🖋️ ahora SOLO rutas
   signatures: {
-    tecnico: string;
-    encargado: string;
+    tecnico: string;    // file://...
+    encargado: string; // file://...
     fechaFirma: string;
   };
 
   createdAt: string;
 };
 
-// 🆔 GENERADOR DE ID PROFESIONAL
+// 🆔 GENERADOR DE ID
 function generateReportId(tecnico: string) {
   const now = new Date();
   const pad = (n: number) => n.toString().padStart(2, '0');
@@ -87,7 +87,7 @@ function generateReportId(tecnico: string) {
   return `${timestamp}-${initials}`;
 }
 
-// 🆕 CREAR REPORTE (RETORNA EL REPORTE CREADO)
+// 🆕 CREAR REPORTE
 export async function saveReport(
   report: Omit<Report, 'id' | 'createdAt'>
 ): Promise<Report> {
@@ -111,7 +111,7 @@ export async function saveReport(
   }
 }
 
-// ✏️ ACTUALIZAR REPORTE (NO toca ID)
+// ✏️ ACTUALIZAR REPORTE
 export async function updateReport(updatedReport: Report): Promise<void> {
   try {
     const existing = await AsyncStorage.getItem(STORAGE_KEY);
