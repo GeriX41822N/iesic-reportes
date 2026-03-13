@@ -1,12 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  Alert,
-  Button,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    Alert,
+    Button,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 
 import { generateAndSharePDF } from '../../../utils/pdfGenerator';
@@ -145,7 +145,9 @@ export default function ReportDetailScreen() {
           onPress={() =>
             router.push({
               pathname: '/',
-              params: { id: report.id }, // 👈 mismo patrón: SOLO ID
+              params: {
+                report: JSON.stringify(report),
+              },
             })
           }
         />

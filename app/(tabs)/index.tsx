@@ -11,7 +11,8 @@ import Observations, {
 } from '../../components/report/Observations';
 import Signatures from '../../components/report/Signatures';
 import { generateAndSharePDF } from '../../utils/pdfGenerator';
-import { getReports, Report, saveReport, updateReport, } from '../../utils/reportStorage';
+import { getReports, Report, saveReport, updateReport } from '../../utils/reportStorage';
+
 /* 🔧 Estado inicial correcto */
 const EMPTY_ACTIVITIES: ActivitiesData = {
   limpiezaFiltros: false,
@@ -24,10 +25,18 @@ const EMPTY_ACTIVITIES: ActivitiesData = {
   revisionControlRemoto: false,
   verificacionGeneral: false,
 };
+
 const EMPTY_MEASUREMENTS = {
   presionGas: '',
   corriente: '',
   voltaje: '',
+};
+
+const EMPTY_EVIDENCE = {
+  filtros: { antes: null, durante: null, despues: null },
+  serpentines: { antes: null, durante: null, despues: null },
+  turbina: { antes: null, durante: null, despues: null },
+  ventilador: { antes: null, durante: null, despues: null },
 };
 
 const EMPTY_REPORT: Omit<Report, 'id' | 'createdAt'> = {
@@ -43,12 +52,7 @@ const EMPTY_REPORT: Omit<Report, 'id' | 'createdAt'> = {
     capacidadBTU: '',
     numeroSerie: '',
   },
-  evidencePhotos: {
-    filtros: null,
-    serpentines: null,
-    turbina: null,
-    ventilador: null,
-  },
+  evidencePhotos: EMPTY_EVIDENCE,
   activities: EMPTY_ACTIVITIES,
   measurements: EMPTY_MEASUREMENTS,
   observations: EMPTY_OBSERVATIONS,
@@ -71,83 +75,76 @@ export default function NewReportScreen() {
   const [report, setReport] =
     useState<Omit<Report, 'id' | 'createdAt'> | Report>(EMPTY_REPORT);
 
-useEffect(() => {
-  if (editingReport) {
-    setReport({
-      ...editingReport,
-      activities: editingReport.activities ?? EMPTY_ACTIVITIES,
-      measurements: editingReport.measurements ?? EMPTY_MEASUREMENTS,
-      observations: editingReport.observations ?? EMPTY_OBSERVATIONS,
-      signatures: editingReport.signatures ?? {
-        tecnico: '',
-        encargado: '',
-        fechaFirma: '',
-      },
-    });
-  } else {
-    setReport(EMPTY_REPORT);
-  }
-}, [editingReport]);
+  useEffect(() => {
+    if (editingReport) {
+      setReport({
+        ...editingReport,
+        evidencePhotos: editingReport.evidencePhotos ?? EMPTY_EVIDENCE,
+        activities: editingReport.activities ?? EMPTY_ACTIVITIES,
+        measurements: editingReport.measurements ?? EMPTY_MEASUREMENTS,
+        observations: editingReport.observations ?? EMPTY_OBSERVATIONS,
+        signatures: editingReport.signatures ?? {
+          tecnico: '',
+          encargado: '',
+          fechaFirma: '',
+        },
+      });
+    } else {
+      setReport(EMPTY_REPORT);
+    }
+  }, [editingReport]);
 
-
+  /* ✔ Solo datos generales obligatorios */
   const isReportValid = () => {
-    const { generalData, evidencePhotos } = report as Report;
+    const { generalData } = report as Report;
 
-    const generalDataValid =
+    return (
       generalData.cliente.trim() !== '' &&
       generalData.fecha.trim() !== '' &&
-      generalData.tecnico.trim() !== '';
-
-    if (isEditing) return generalDataValid;
-
-    const photosValid =
-      !!evidencePhotos.filtros &&
-      !!evidencePhotos.serpentines &&
-      !!evidencePhotos.turbina &&
-      !!evidencePhotos.ventilador;
-
-    return generalDataValid && photosValid;
+      generalData.tecnico.trim() !== ''
+    );
   };
 
-const handleSave = async () => {
-  if (isEditing) {
-    await updateReport(report as Report);
-    Alert.alert(
-      'Reporte actualizado ✏️',
-      '¿Deseas compartir el PDF?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Compartir PDF 📄',
-          onPress: () =>
-            generateAndSharePDF(report as Report),
-        },
-      ]
-    );
-  } else {
-    await saveReport(report as Omit<Report, 'id' | 'createdAt'>);
+  const handleSave = async () => {
+    if (isEditing) {
+      await updateReport(report as Report);
 
-    const reports = await getReports();
-    const savedReport = reports.at(-1);
+      Alert.alert(
+        'Reporte actualizado ✏️',
+        '¿Deseas compartir el PDF?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Compartir PDF 📄',
+            onPress: () =>
+              generateAndSharePDF(report as Report),
+          },
+        ]
+      );
+    } else {
+      await saveReport(report as Omit<Report, 'id' | 'createdAt'>);
 
-    Alert.alert(
-      'Reporte guardado ✅',
-      '¿Deseas compartir el PDF?',
-      [
-        { text: 'Después', style: 'cancel' },
-        {
-          text: 'Compartir PDF 📄',
-          onPress: () =>
-            savedReport &&
-            generateAndSharePDF(savedReport),
-        },
-      ]
-    );
-  }
+      const reports = await getReports();
+      const savedReport = reports.at(-1);
 
-  setReport(EMPTY_REPORT);
-  router.replace('/history');
-};
+      Alert.alert(
+        'Reporte guardado ✅',
+        '¿Deseas compartir el PDF?',
+        [
+          { text: 'Después', style: 'cancel' },
+          {
+            text: 'Compartir PDF 📄',
+            onPress: () =>
+              savedReport &&
+              generateAndSharePDF(savedReport),
+          },
+        ]
+      );
+    }
+
+    setReport(EMPTY_REPORT);
+    router.replace('/history');
+  };
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }}>
@@ -205,8 +202,6 @@ const handleSave = async () => {
         disabled={!isReportValid()}
         onPress={handleSave}
       />
-
-
     </ScrollView>
   );
 }

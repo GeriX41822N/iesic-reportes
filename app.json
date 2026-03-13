@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Grupo Ilumiled",
-    "slug": "Grupo-Ilumiled",
+    "slug": "iesic-reportes",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.gerinomendez.iesicreportes"
+      "package": "com.grupoilumiled.reportes"
     },
     "web": {
       "output": "static",
@@ -51,6 +51,7 @@
       "eas": {
         "projectId": "53f7c3fb-2650-49bf-bc0f-db9f50a801ca"
       }
-    }
+    },
+    "owner": "gerinomendez"
   }
 }
