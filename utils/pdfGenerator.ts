@@ -14,11 +14,14 @@ async function fileToBase64(uri: string) {
 }
 
 export async function generateAndSharePDF(report: Report) {
+
   if (isSharing) return;
   isSharing = true;
 
   try {
+
     const html = await generateHTML(report);
+
     const { uri } = await Print.printToFileAsync({ html });
 
     await Sharing.shareAsync(uri, {
@@ -26,8 +29,9 @@ export async function generateAndSharePDF(report: Report) {
       dialogTitle: `Compartir REPORTE_${report.id}`,
       UTI: 'com.adobe.pdf',
     });
+
   } catch (error) {
-    console.error('Error generando PDF', error);
+    console.error("Error generando PDF", error);
   } finally {
     isSharing = false;
   }
@@ -43,28 +47,27 @@ async function generateHTML(report: Report) {
 
   if (!isNaN(corriente) && corriente > 6) {
     observationsAuto.push(
-      'Se detecta consumo de corriente por encima del valor nominal especificado por el fabricante.'
+      "Se detecta consumo de corriente por encima del valor nominal especificado por el fabricante."
     );
   }
 
   if (report.observations.plantillas.obstruccionDrenaje) {
     observationsAuto.push(
-      'Se detectó obstrucción en la manguera de drenaje por acumulación de suciedad.'
+      "Se detectó obstrucción en la manguera de drenaje por acumulación de suciedad."
     );
   }
 
   if (report.observations.plantillas.recomendacionPreventivo) {
     observationsAuto.push(
-      'Se recomienda programar mantenimiento preventivo cada 3 meses.'
+      "Se recomienda programar mantenimiento preventivo cada 3 meses."
     );
   }
 
   const observationsText = [
     ...observationsAuto,
-    report.observations.comentarioLibre,
-  ]
-    .filter(Boolean)
-    .join('<br/><br/>');
+    report.observations.comentarioLibre
+  ].filter(Boolean).join("<br/><br/>");
+
 
 
   /* ================= FOTOS ================= */
@@ -73,15 +76,15 @@ async function generateHTML(report: Report) {
 
     const antes = photos.antes
       ? `data:image/jpeg;base64,${await fileToBase64(photos.antes)}`
-      : '';
+      : "";
 
     const durante = photos.durante
       ? `data:image/jpeg;base64,${await fileToBase64(photos.durante)}`
-      : '';
+      : "";
 
     const despues = photos.despues
       ? `data:image/jpeg;base64,${await fileToBase64(photos.despues)}`
-      : '';
+      : "";
 
     return `
       <h3>${title}</h3>
@@ -94,9 +97,9 @@ async function generateHTML(report: Report) {
         </tr>
 
         <tr>
-          <td>${antes ? `<img src="${antes}" />` : ''}</td>
-          <td>${durante ? `<img src="${durante}" />` : ''}</td>
-          <td>${despues ? `<img src="${despues}" />` : ''}</td>
+          <td>${antes ? `<img src="${antes}" />` : ""}</td>
+          <td>${durante ? `<img src="${durante}" />` : ""}</td>
+          <td>${despues ? `<img src="${despues}" />` : ""}</td>
         </tr>
       </table>
     `;
@@ -108,100 +111,144 @@ async function generateHTML(report: Report) {
   const ventiladorHTML = await buildPhotoSet("Ventilador", report.evidencePhotos.ventilador);
 
 
+
   /* ================= FIRMAS ================= */
 
   const tecnico = report.signatures.tecnico
     ? `data:image/png;base64,${await fileToBase64(report.signatures.tecnico)}`
-    : '';
+    : "";
 
   const encargado = report.signatures.encargado
     ? `data:image/png;base64,${await fileToBase64(report.signatures.encargado)}`
-    : '';
+    : "";
 
 
-  /* ================= ACTIVIDADES ================= */
 
-  const activitiesMap: Record<string, string> = {
-    limpiezaFiltros: 'Limpieza de filtros de aire',
-    limpiezaEvaporador: 'Limpieza de serpentín evaporador',
-    limpiezaCondensador: 'Limpieza de serpentín condensador',
-    limpiezaDrenaje: 'Limpieza de charola de drenaje',
-    ajusteTornilleria: 'Ajuste de tornillería y piezas sueltas',
-    revisionGas: 'Revisión de carga de gas refrigerante',
-    medicionElectrica: 'Medición de amperaje y voltaje',
-    revisionControlRemoto: 'Revisión de controles remotos',
-    verificacionGeneral: 'Verificación de funcionamiento general',
-  };
+  /* ================= EVAPORADORA ================= */
 
-  const activitiesHTML = Object.entries(activitiesMap)
-    .map(
-      ([key, label]) =>
-        `[${report.activities[key as keyof typeof report.activities] ? 'x' : ' '}] ${label}`
-    )
-    .join('<br/>');
+  const evaporadoraMap: Record<string,string> = {
+    limpiezaFiltros: "Limpieza de filtros",
+    limpiezaSerpentin: "Limpieza de serpentín",
+    revisionTurbina: "Revisión de turbina",
+    limpiezaDrenaje: "Limpieza de drenaje",
+    revisionTarjeta: "Revisión de tarjeta electrónica",
+    revisionSensores: "Revisión de sensores",
+    revisionCableado: "Revisión de cableado",
+    pruebaEncendido: "Prueba de encendido",
+    medicionTemperatura: "Medición de temperatura"
+  }
+
+  const evaporadoraHTML = Object.entries(evaporadoraMap)
+  .map(([key,label]) =>
+  `[${report.evaporadora[key as keyof typeof report.evaporadora] ? "x" : " "}] ${label}`
+  ).join("<br/>")
+
+
+
+  /* ================= CONDENSADORA ================= */
+
+  const condensadoraMap: Record<string,string> = {
+    limpiezaSerpentin: "Limpieza de serpentín",
+    revisionVentilador: "Revisión de ventilador",
+    revisionCompresor: "Revisión de compresor",
+    revisionContactor: "Revisión de contactor",
+    revisionCapacitor: "Revisión de capacitor",
+    revisionPresiones: "Revisión de presiones",
+    revisionFugas: "Revisión de fugas",
+    ajusteConexiones: "Ajuste de conexiones",
+    revisionElectrica: "Revisión eléctrica"
+  }
+
+  const condensadoraHTML = Object.entries(condensadoraMap)
+  .map(([key,label]) =>
+  `[${report.condensadora[key as keyof typeof report.condensadora] ? "x" : " "}] ${label}`
+  ).join("<br/>")
+
+
+
+  /* ================= REFACCIONES ================= */
+
+  const refaccionesMap: Record<string,string> = {
+    gas: "Gas refrigerante",
+    capacitor: "Capacitor",
+    contactor: "Contactor",
+    tarjeta: "Tarjeta electrónica",
+    motorVentilador: "Motor ventilador",
+    compresor: "Compresor"
+  }
+
+  const refaccionesHTML = Object.entries(refaccionesMap)
+  .map(([key,label]) =>
+  `[${report.refacciones[key as keyof typeof report.refacciones] ? "x" : " "}] ${label}`
+  ).join("<br/>")
+
+
+
+  /* ================= DIAGNOSTICO ================= */
+
+  const diagnosticoMap: Record<string,string> = {
+    operando: "Equipo operando correctamente",
+    mantenimientoMayor: "Requiere mantenimiento mayor",
+    requiereRefacciones: "Requiere refacciones",
+    cambioEquipo: "Se recomienda cambio de equipo",
+    fueraServicio: "Equipo fuera de servicio"
+  }
+
+  const diagnosticoHTML = Object.entries(diagnosticoMap)
+  .map(([key,label]) =>
+  `[${report.diagnostico[key as keyof typeof report.diagnostico] ? "x" : " "}] ${label}`
+  ).join("<br/>")
+
 
 
   return `
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-<meta charset="utf-8" />
+<meta charset="utf-8"/>
 
 <style>
 
-@page {
-  size: letter;
-  margin: 15mm;
+@page{
+size:letter;
+margin:15mm;
 }
 
-body {
-  font-family: Arial;
-  font-size: 10px;
-  line-height: 1.2;
+body{
+font-family:Arial;
+font-size:10px;
+line-height:1.2;
 }
 
-h3 {
-  color: #1e5fa3;
-  font-size: 13px;
-  margin: 10px 0 4px 0;
+h3{
+color:#1e5fa3;
+font-size:13px;
+margin:10px 0 4px 0;
 }
 
-table {
-  border-collapse: collapse;
-  width: 100%;
+table{
+border-collapse:collapse;
+width:100%;
 }
 
-td {
-  padding: 4px;
-  vertical-align: top;
+td{
+padding:4px;
+vertical-align:top;
 }
 
-.box {
-  border: 1px solid #000;
-  padding: 6px;
+.box{
+border:1px solid #000;
+padding:6px;
 }
 
-.header-title {
-  font-size: 16px;
-  font-weight: bold;
-  color: #1e5fa3;
-  text-align: center;
-  margin-top: 5px;
-  margin-bottom: 10px;
+.photos img{
+width:100%;
+max-height:120px;
+object-fit:cover;
 }
 
-.photos img {
-  width: 100%;
-  max-height: 120px;
-  object-fit: cover;
-}
-
-.signatures img {
-  width: 140px;
-}
-
-.no-break {
-  page-break-inside: avoid;
+.signatures img{
+width:140px;
 }
 
 </style>
@@ -209,17 +256,17 @@ td {
 
 <body>
 
-<!-- HEADER -->
 
 <table>
+
 <tr>
 
 <td width="25%">
-<img src="${ILUMILED_LOGO_BASE64}" style="width:90px;" />
+<img src="${ILUMILED_LOGO_BASE64}" style="width:90px"/>
 </td>
 
 <td width="25%" align="center">
-<img src="${COPPEL_LOGO_BASE64}" style="width:90px;" />
+<img src="${COPPEL_LOGO_BASE64}" style="width:90px"/>
 </td>
 
 <td width="50%" align="right">
@@ -227,72 +274,81 @@ td {
 </td>
 
 </tr>
+
 </table>
 
-<div class="header-title">
-REPORTE DE MANTENIMIENTO DE AIRE ACONDICIONADO
-</div>
-
-
-<!-- DATOS GENERALES -->
 
 <h3>Datos Generales</h3>
 
 <table border="1">
-
 <tr><td>Cliente</td><td>${report.generalData.cliente}</td></tr>
-
 <tr><td>Fecha</td><td>${report.generalData.fecha}</td></tr>
-
 <tr><td>Técnico</td><td>${report.generalData.tecnico}</td></tr>
-
 </table>
 
 
-<!-- DATOS DEL EQUIPO -->
 
 <h3>Datos del Equipo</h3>
 
 <table border="1">
-
 <tr><td>Ubicación</td><td>${report.equipmentData.ubicacion}</td></tr>
-
 <tr><td>Marca</td><td>${report.equipmentData.marca}</td></tr>
-
 <tr><td>Modelo</td><td>${report.equipmentData.modelo}</td></tr>
-
-<tr><td>Capacidad (BTU)</td><td>${report.equipmentData.capacidadBTU}</td></tr>
-
+<tr><td>Capacidad</td><td>${report.equipmentData.capacidadBTU}</td></tr>
 <tr><td>Número de serie</td><td>${report.equipmentData.numeroSerie}</td></tr>
-
 </table>
 
 
-<!-- MEDICIONES -->
+
+<h3>Unidad Evaporadora</h3>
+
+<div class="box">
+${evaporadoraHTML}
+<br/><br/>
+${report.evaporadora.observaciones || ""}
+</div>
+
+
+
+<h3>Unidad Condensadora</h3>
+
+<div class="box">
+${condensadoraHTML}
+<br/><br/>
+${report.condensadora.observaciones || ""}
+</div>
+
+
 
 <h3>Mediciones</h3>
 
 <table border="1">
-
 <tr><td>Presión de gas</td><td>${report.measurements.presionGas} psi</td></tr>
-
-<tr><td>Corriente eléctrica</td><td>${report.measurements.corriente} A</td></tr>
-
+<tr><td>Corriente</td><td>${report.measurements.corriente} A</td></tr>
 <tr><td>Voltaje</td><td>${report.measurements.voltaje} V</td></tr>
-
 </table>
 
 
-<!-- ACTIVIDADES -->
 
-<h3>Actividades Realizadas</h3>
+<h3>Refacciones</h3>
 
 <div class="box">
-${activitiesHTML}
+${refaccionesHTML}
+<br/><br/>
+${report.refacciones.otro || ""}
 </div>
 
 
-<!-- FOTOS -->
+
+<h3>Diagnóstico</h3>
+
+<div class="box">
+${diagnosticoHTML}
+<br/><br/>
+${report.diagnostico.comentario || ""}
+</div>
+
+
 
 <h3>Evidencia Fotográfica</h3>
 
@@ -302,26 +358,24 @@ ${turbinaHTML}
 ${ventiladorHTML}
 
 
-<!-- OBSERVACIONES -->
 
-<h3>Observaciones / Recomendaciones</h3>
+<h3>Observaciones</h3>
 
 <div class="box">
-${observationsText || 'Sin observaciones'}
+${observationsText || "Sin observaciones"}
 </div>
 
 
-<!-- FIRMAS -->
 
-<table class="signatures no-break" style="margin-top:20px;">
+<table class="signatures" style="margin-top:20px">
 
 <tr>
 
 <td align="center">
 
-${tecnico ? `<img src="${tecnico}" style="width:160px;" />` : ''}
+${tecnico ? `<img src="${tecnico}" style="width:160px"/>` : ""}
 
-<div style="border-top:1px solid #000;width:80%;margin:auto;"></div>
+<div style="border-top:1px solid #000;width:80%;margin:auto"></div>
 
 Firma del Técnico
 
@@ -329,9 +383,9 @@ Firma del Técnico
 
 <td align="center">
 
-${encargado ? `<img src="${encargado}" style="width:160px;" />` : ''}
+${encargado ? `<img src="${encargado}" style="width:160px"/>` : ""}
 
-<div style="border-top:1px solid #000;width:80%;margin:auto;"></div>
+<div style="border-top:1px solid #000;width:80%;margin:auto"></div>
 
 Firma del Cliente / Responsable
 
