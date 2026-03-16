@@ -2,6 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STORAGE_KEY = 'reports';
 
+type PhotoSet = {
+  antes: string | null;
+  durante: string | null;
+  despues: string | null;
+};
+
 export type Report = {
   id: string;
 
@@ -92,10 +98,10 @@ export type Report = {
   };
 
   evidencePhotos: {
-    filtros: string | null;
-    serpentines: string | null;
-    turbina: string | null;
-    ventilador: string | null;
+  filtros: PhotoSet;
+  serpentines: PhotoSet;
+  turbina: PhotoSet;
+  ventilador: PhotoSet;
   };
 
   signatures: {
@@ -232,10 +238,10 @@ export async function saveReport(
       },
 
       evidencePhotos: report.evidencePhotos ?? {
-        filtros: null,
-        serpentines: null,
-        turbina: null,
-        ventilador: null
+      filtros: { antes: null, durante: null, despues: null },
+      serpentines: { antes: null, durante: null, despues: null },
+      turbina: { antes: null, durante: null, despues: null },
+      ventilador: { antes: null, durante: null, despues: null }
       },
 
       signatures: report.signatures ?? {

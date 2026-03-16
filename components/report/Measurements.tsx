@@ -23,7 +23,7 @@ export default function Measurements({ data, onChange }: Props) {
       ...data,
       [key]: sanitized,
     });
-  }
+  }   
 
   return (
     <View style={styles.container}>
