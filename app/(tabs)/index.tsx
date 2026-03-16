@@ -26,7 +26,7 @@ import {
 
 
 /* ================================
-   ESTADOS VACÍOS
+   ESTADOS VACÍOS ----
 ================================ */
 
 const EMPTY_EVAPORADORA = {
@@ -328,7 +328,7 @@ export default function NewReportScreen() {
         disabled={!isReportValid()}
         onPress={handleSave}
       />
-
+ 
     </ScrollView>
   );
 }
